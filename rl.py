@@ -8,6 +8,6 @@ import numpy as np
 
 def evaluate_sfnn(genome : Any) -> float:
     """
-    Evaluate a SFNN genome
+    Evaluate a SFNN genome and returns a fitness score
     """
     return np.random.rand()
