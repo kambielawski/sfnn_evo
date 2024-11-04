@@ -168,4 +168,5 @@ if __name__=='__main__':
     model = SFNN(input_layer_size=2, hidden_layer_size=4, output_layer_size=2, neuron_size=4, lr=0.1)
     obs = torch.tensor([5,0.5])
     reward = torch.tensor([5])
+    # sanity check 
     print(model(obs, reward))
