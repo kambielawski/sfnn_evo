@@ -198,7 +198,7 @@ class SFNN(nn.Module):
                                                   self.hidden_state[relative_i, connected_hidden_neurons[i]], # (number_of_connections x D)
                                                   self.lr) 
                 
-        #Get last element of each action neuron, then argmax to choose the action
+        #Get first element of each action neuron, then argmax to choose the action
         return self.post_neuron_state[-self.output_layer_size:, 0].argmax()
 
 if __name__=='__main__':
