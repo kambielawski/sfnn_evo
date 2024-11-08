@@ -8,6 +8,7 @@ from copy import deepcopy
 
 import numpy as np
 
+from sfnn import SFNN
 from rl import evaluate_sfnn
 
 ################################################################################
@@ -18,10 +19,6 @@ class Individual(ABC):
     """
     Abstract base class for individuals in an evolutionary algorithm
     """
-    @abstractmethod
-    def init_genome(self) -> Any:
-        pass
-
     @abstractmethod
     def mutate(self):
         pass
@@ -58,39 +55,38 @@ class SFNNIndividual(Individual):
     """
     def __init__(self, 
                  neuron_size : int,
-                 gru_size : int):
+                 gru_size : int,
+                 input_layer_size : int,
+                 hidden_layer_size : int,
+                 output_layer_size : int,
+                 lr : float,
+                 ticks : int):
+        self.sfnn = SFNN(neuron_size=neuron_size, 
+                         input_layer_size=input_layer_size, 
+                         hidden_layer_size=hidden_layer_size, 
+                         output_layer_size=output_layer_size, 
+                         lr=lr, 
+                         ticks=ticks)
         self.neuron_size = neuron_size # Number of neurons in the FC input layer
         self.gru_size = gru_size       # Number of neurons in the GRU
-        self.genome = None
         self.fitness = None
         self.genome_size = 0
-        self.init_genome()
-
-    def init_genome(self) -> Any:
-        self.genome = {
-            'input_neuron_weights' : np.random.randn(self.neuron_size, self.neuron_size),
-            'input_neuron_biases' : np.random.randn(self.neuron_size, self.neuron_size),
-            'reservoir_neuron_weights' : np.random.randn(self.neuron_size, self.neuron_size),
-            'reservoir_neuron_biases' : np.random.randn(self.neuron_size, self.neuron_size),
-            'output_neuron_weights' : np.random.randn(self.neuron_size, self.neuron_size),
-            'output_neuron_biases' : np.random.randn(self.neuron_size, self.neuron_size),
-            'input_gru_weights' : np.random.randn(self.gru_size),
-            'input_gru_biases' : np.random.randn(self.gru_size),
-            'reservoir_gru_weights' : np.random.randn(self.gru_size),
-            'reservoir_gru_biases' : np.random.randn(self.gru_size),
-            'output_gru_weights' : np.random.randn(self.gru_size),
-            'output_gru_biases' : np.random.randn(self.gru_size)
-        }
-        self.genome_size = sum(np.prod(self.genome[key].shape) for key in self.genome.keys())
+        self.genome = self.sfnn.get_parameters()
 
     def mutate(self, mutation_rate : float):
         """
         Mutate every element in the genome with a probability of mutation_rate
         """
-        for _, array in self.genome.items():
-            for x in np.nditer(array, op_flags=['readwrite']): # n-dimensional iterator
-                if np.random.random() < mutation_rate:
-                    x[...] = x + np.random.normal(0, 0.2)
+
+        # TODO: rewrite to operate on torch representation of genome
+        return None
+
+        # mutation
+
+        # for _, array in self.genome.items():
+        #     for x in np.nditer(array, op_flags=['readwrite']): # n-dimensional iterator
+        #         if np.random.random() < mutation_rate:
+        #             x[...] = x + np.random.normal(0, 0.2)
 
     def crossover(self, other : 'SFNNIndividual') -> 'SFNNIndividual':
         """
@@ -99,7 +95,7 @@ class SFNNIndividual(Individual):
         return self, other
     
     def evaluate(self):
-        self.fitness = evaluate_sfnn(self.genome)
+        self.fitness = evaluate_sfnn(self.sfnn)
     
 ################################################################################
 
@@ -118,6 +114,13 @@ class HillClimber(EvolutionaryAlgorithm):
         self.n_generations = n_generations
         self.neuron_size = neuron_size
         self.gru_size = gru_size
+
+        # SFNN parameters
+        self.input_layer_size = 4
+        self.hidden_layer_size = 10
+        self.output_layer_size = 2
+        self.lr = 0.1
+        self.ticks = 2
 
         self.population = []
 
@@ -141,7 +144,14 @@ class HillClimber(EvolutionaryAlgorithm):
         # Reproduction
         children = []
         for i in range(self.population_size):
-            child = deepcopy(self.population[i])
+            child = SFNNIndividual(self.neuron_size, 
+                                   self.gru_size,
+                                   self.input_layer_size,
+                                   self.hidden_layer_size,
+                                   self.output_layer_size,
+                                   self.lr,
+                                   self.ticks)
+            child.genome = deepcopy(self.population[i].genome)
             child.mutate(self.mutation_rate)
             child.evaluate()
             children.append(child)
@@ -159,7 +169,13 @@ class HillClimber(EvolutionaryAlgorithm):
         """
         Initialize the population
         """
-        self.population = [SFNNIndividual(self.neuron_size, self.gru_size) for _ in range(self.population_size)]
+        self.population = [SFNNIndividual(self.neuron_size, 
+                                          self.gru_size,
+                                          self.input_layer_size,
+                                          self.hidden_layer_size,
+                                          self.output_layer_size,
+                                          self.lr,
+                                          self.ticks) for _ in range(self.population_size)]
         # Evaluate the initial population
         for individual in self.population:
             individual.evaluate()

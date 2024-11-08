@@ -5,10 +5,14 @@ Implementation of RL gym environments
 from typing import Any
 import random
 
+import torch
+
+from sfnn import SFNN
+
 import numpy as np
 import gymnasium as gym
 
-def run_rl(sfnn, env_name : str, n_episodes : int = 8) -> float:
+def run_rl(policy, env_name : str, n_episodes : int = 8) -> float:
     """
     Run a RL environment with a SFNN genome
     """
@@ -17,7 +21,8 @@ def run_rl(sfnn, env_name : str, n_episodes : int = 8) -> float:
 
     # Reset the environment to generate the first observation
     seed = random.randint(0, 2**32 - 1)
-    _, _ = env.reset(seed=seed)
+    observation, _ = env.reset(seed=seed)
+    reward = 0
 
     episode_rewards = []
     episode_count = 0  # Track number of episodes
@@ -27,9 +32,9 @@ def run_rl(sfnn, env_name : str, n_episodes : int = 8) -> float:
 
         for t in range(1000):
             # Insert SFNN policy here
-            action = env.action_space.sample() # Random policy
-            observation, reward, terminated, truncated, info = env.step(action)
-            print(observation)
+            # action = env.action_space.sample() # Random policy
+            action = policy(torch.tensor(observation), torch.tensor(reward))
+            observation, reward, terminated, truncated, _ = env.step(action.item())
             
             episode_reward += reward  # Accumulate reward
             
@@ -39,7 +44,7 @@ def run_rl(sfnn, env_name : str, n_episodes : int = 8) -> float:
                 print(f"Episode {episode_count} finished with total reward: {episode_reward}")
                 
                 episode_reward = 0
-                observation, info = env.reset()
+                observation, _ = env.reset()
                 break
 
     env.close()
