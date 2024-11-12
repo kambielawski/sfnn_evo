@@ -3,7 +3,6 @@ Evolutionary algorithms
 """
 
 from abc import ABC, abstractmethod
-from typing import Any
 from copy import deepcopy
 
 import numpy as np
@@ -77,16 +76,10 @@ class SFNNIndividual(Individual):
         """
         Mutate every element in the genome with a probability of mutation_rate
         """
-
-        # TODO: rewrite to operate on torch representation of genome
-        return None
-
-        # mutation
-
-        # for _, array in self.genome.items():
-        #     for x in np.nditer(array, op_flags=['readwrite']): # n-dimensional iterator
-        #         if np.random.random() < mutation_rate:
-        #             x[...] = x + np.random.normal(0, 0.2)
+        for param_type in self.genome:
+            for x in np.nditer(self.genome[param_type], op_flags=['readwrite']):
+                if np.random.random() < mutation_rate:
+                    x[...] = np.random.uniform(-1, 1)
 
     def crossover(self, other : 'SFNNIndividual') -> 'SFNNIndividual':
         """
@@ -108,7 +101,10 @@ class HillClimber(EvolutionaryAlgorithm):
                  mutation_rate : float,
                  n_generations : int,
                  neuron_size : int,
-                 gru_size : int):
+                 gru_size : int,
+                 hidden_layer_size : int,
+                 lr : float,
+                 ticks : int):
         self.population_size = population_size
         self.mutation_rate = mutation_rate
         self.n_generations = n_generations
@@ -116,11 +112,13 @@ class HillClimber(EvolutionaryAlgorithm):
         self.gru_size = gru_size
 
         # SFNN parameters
-        self.input_layer_size = 4
-        self.hidden_layer_size = 10
+        self.hidden_layer_size = hidden_layer_size
+        self.lr = lr
+        self.ticks = ticks
+
+        # Determined by environment
         self.output_layer_size = 2
-        self.lr = 0.1
-        self.ticks = 2
+        self.input_layer_size = 4
 
         self.population = []
 
