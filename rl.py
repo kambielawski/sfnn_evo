@@ -6,11 +6,9 @@ from typing import Any
 import random
 
 import torch
-
-from sfnn import SFNN
-
-import numpy as np
 import gymnasium as gym
+import numpy as np
+from sfnn import SFNN
 
 def run_rl(policy, env_name : str, n_episodes : int = 8) -> float:
     """
@@ -41,17 +39,19 @@ def run_rl(policy, env_name : str, n_episodes : int = 8) -> float:
             if terminated or truncated:
                 episode_count += 1
                 episode_rewards.append(episode_reward)
-                print(f"Episode {episode_count} finished with total reward: {episode_reward}")
-                
                 episode_reward = 0
                 observation, _ = env.reset()
                 break
 
     env.close()
 
-    print(episode_rewards)
+    # Episode weighting... 
+    weights = np.array(range(1, n_episodes+1)) / sum(range(1, n_episodes+1))
+    episodes_weighted_avg = np.average(episode_rewards, weights=weights)
 
-    return episode_rewards
+    print(f"Final reward: {episodes_weighted_avg}")
+
+    return episodes_weighted_avg
 
 
 def evaluate_sfnn(genome : Any) -> float:
@@ -64,5 +64,10 @@ def evaluate_sfnn(genome : Any) -> float:
     return final_reward
 
 if __name__ == "__main__":
-    genome = None
+    genome = SFNN(neuron_size=10,
+                  input_layer_size=4,
+                  hidden_layer_size=10,
+                  output_layer_size=2,
+                  lr=0.1,
+                  ticks=2)
     print(evaluate_sfnn(genome))
