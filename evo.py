@@ -4,6 +4,8 @@ Evolutionary algorithms
 
 from abc import ABC, abstractmethod
 from copy import deepcopy
+import pickle
+import os
 
 import numpy as np
 
@@ -177,3 +179,10 @@ class HillClimber(EvolutionaryAlgorithm):
         # Evaluate the initial population
         for individual in self.population:
             individual.evaluate()
+
+    def pickle_ea(self, exp_dir : str):
+        """
+        Pickle the EA
+        """
+        with open(os.path.join(exp_dir, 'ea.pkl'), 'wb') as f:
+            pickle.dump(self, f)

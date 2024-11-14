@@ -28,7 +28,6 @@ if __name__ == "__main__":
     if exp_config["ea"] == "HillClimber":
         ea = HillClimber(**exp_config["evo_parameters"])
         ea.evolve()
-        with open(os.path.join(exp_dir, 'ea.pkl'), 'wb') as f:
-            pickle.dump(ea, f)
+        ea.pickle_ea()
     else:   
         raise ValueError(f"Invalid EA: {exp_config['ea']}")
