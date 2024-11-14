@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 import pickle
 import os
+import time
 
 import numpy as np
 
@@ -99,6 +100,7 @@ class HillClimber(EvolutionaryAlgorithm):
     Hill climber evolutionary algorithm
     """
     def __init__(self,
+                 exp_dir : str,
                  population_size : int,
                  mutation_rate : float,
                  n_generations : int,
@@ -107,6 +109,8 @@ class HillClimber(EvolutionaryAlgorithm):
                  hidden_layer_size : int,
                  lr : float,
                  ticks : int):
+        self.exp_dir = exp_dir
+        
         self.population_size = population_size
         self.mutation_rate = mutation_rate
         self.n_generations = n_generations
@@ -124,6 +128,9 @@ class HillClimber(EvolutionaryAlgorithm):
 
         self.population = []
 
+        # Tracking
+        self.best_fitness = []
+
     def evolve(self):
         """
         Evolve the population
@@ -131,10 +138,25 @@ class HillClimber(EvolutionaryAlgorithm):
         # Initialize population
         self.init_population()
 
+        total_time = 0
+
         # Evolve the population
         for gen in range(self.n_generations):
             print(f'Generation {gen} running.')
+            start_time = time.time()
+
             self.evolve_one_generation(gen)
+            
+            # Pickle the run
+            if gen % 100 == 0:
+                self.pickle_ea(self.exp_dir)
+
+            # Tracking
+            self.best_fitness.append(self.population[0])
+            
+            end_time = time.time()
+            total_time += end_time - start_time
+            print(f'Generation {gen}: {end_time - start_time} seconds. Average time per generation: {total_time / (gen + 1)}')
 
     def evolve_one_generation(self, gen : int):
         """

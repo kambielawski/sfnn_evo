@@ -3,7 +3,7 @@ Run an experiment
 """
 import os
 import argparse
-import pickle
+import shutil
 import json
 from datetime import datetime
 from evo import HillClimber
@@ -19,6 +19,9 @@ date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 exp_dir = f'./experiments/exp_{date}'
 os.makedirs(exp_dir, exist_ok=True)
 
+# Move experiment file to experiment directory
+shutil.copy(args.exp_file, os.path.join(exp_dir, 'exp_config.json'))
+
 # Load experiment configuration
 with open(args.exp_file, "r") as f:
     exp_config = json.load(f)
@@ -26,8 +29,7 @@ with open(args.exp_file, "r") as f:
 # Run experiment
 if __name__ == "__main__":
     if exp_config["ea"] == "HillClimber":
-        ea = HillClimber(**exp_config["evo_parameters"])
+        ea = HillClimber(exp_dir, **exp_config["evo_parameters"])
         ea.evolve()
-        ea.pickle_ea()
     else:   
         raise ValueError(f"Invalid EA: {exp_config['ea']}")
