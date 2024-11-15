@@ -12,6 +12,9 @@ def plot_best_fitness(exp_dir : str):
 
     best_fitness_values = [individual.fitness for individual in ea.best_fitness_individuals]
     plt.plot(best_fitness_values)
+    plt.title('Best Fitness')
+    plt.xlabel('Generation')
+    plt.ylabel('Fitness')
     plt.show()
 
 def plot_average_fitness(exp_dir : str):
@@ -20,4 +23,7 @@ def plot_average_fitness(exp_dir : str):
 
     average_fitness_values = [np.mean(fitness_values) for fitness_values in ea.population_fitness]
     plt.plot(average_fitness_values)
+    plt.title('Average Fitness')
+    plt.xlabel('Generation')
+    plt.ylabel('Fitness')
     plt.show()
