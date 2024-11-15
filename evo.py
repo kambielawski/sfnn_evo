@@ -22,7 +22,7 @@ class Individual(ABC):
     Abstract base class for individuals in an evolutionary algorithm
     """
     @abstractmethod
-    def mutate(self):
+    def mutate(self, mutation_rate : float):
         pass
 
     @abstractmethod
@@ -58,15 +58,11 @@ class SFNNIndividual(Individual):
     def __init__(self, 
                  neuron_size : int,
                  gru_size : int,
-                 input_layer_size : int,
-                 hidden_layer_size : int,
-                 output_layer_size : int,
+                 n_neurons : int,
                  lr : float,
                  ticks : int):
         self.sfnn = SFNN(neuron_size=neuron_size, 
-                         input_layer_size=input_layer_size, 
-                         hidden_layer_size=hidden_layer_size, 
-                         output_layer_size=output_layer_size, 
+                         n_neurons=n_neurons, 
                          lr=lr, 
                          ticks=ticks)
         self.neuron_size = neuron_size # Number of neurons in the FC input layer
@@ -83,6 +79,8 @@ class SFNNIndividual(Individual):
             for x in np.nditer(self.genome[param_type], op_flags=['readwrite']):
                 if np.random.random() < mutation_rate:
                     x[...] = np.random.uniform(-1, 1)
+
+        self.sfnn.set_parameters(self.genome)
 
     def crossover(self, other : 'SFNNIndividual') -> 'SFNNIndividual':
         """
@@ -106,7 +104,7 @@ class HillClimber(EvolutionaryAlgorithm):
                  n_generations : int,
                  neuron_size : int,
                  gru_size : int,
-                 hidden_layer_size : int,
+                 n_neurons : int,
                  lr : float,
                  ticks : int):
         self.exp_dir = exp_dir
@@ -118,7 +116,7 @@ class HillClimber(EvolutionaryAlgorithm):
         self.gru_size = gru_size
 
         # SFNN parameters
-        self.hidden_layer_size = hidden_layer_size
+        self.n_neurons = n_neurons
         self.lr = lr
         self.ticks = ticks
 
@@ -168,11 +166,9 @@ class HillClimber(EvolutionaryAlgorithm):
         # Reproduction
         children = []
         for i in range(self.population_size):
-            child = SFNNIndividual(self.neuron_size, 
+            child = SFNNIndividual(self.neuron_size,
                                    self.gru_size,
-                                   self.input_layer_size,
-                                   self.hidden_layer_size,
-                                   self.output_layer_size,
+                                   self.n_neurons,
                                    self.lr,
                                    self.ticks)
             child.genome = deepcopy(self.population[i].genome)
@@ -195,9 +191,7 @@ class HillClimber(EvolutionaryAlgorithm):
         """
         self.population = [SFNNIndividual(self.neuron_size, 
                                           self.gru_size,
-                                          self.input_layer_size,
-                                          self.hidden_layer_size,
-                                          self.output_layer_size,
+                                          self.n_neurons,
                                           self.lr,
                                           self.ticks) for _ in range(self.population_size)]
         # Evaluate the initial population

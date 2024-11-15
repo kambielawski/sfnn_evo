@@ -10,12 +10,19 @@ import gymnasium as gym
 import numpy as np
 from sfnn import SFNN
 
-def run_rl(policy, env_name : str, n_episodes : int = 8) -> float:
+def run_rl(policy : SFNN,
+           env_name : str,
+           n_episodes : int = 8) -> float:
     """
     Run a RL environment with a SFNN genome
     """
 
     env = gym.make(env_name)
+
+    # Set up the SFNN parameters for this environment
+    input_layer_size = int(np.prod(env.observation_space.shape))
+    output_layer_size = int(np.prod(env.action_space.shape))
+    policy.init_connectivity(input_layer_size, output_layer_size)
 
     # Reset the environment to generate the first observation
     seed = random.randint(0, 2**32 - 1)
@@ -24,7 +31,7 @@ def run_rl(policy, env_name : str, n_episodes : int = 8) -> float:
 
     episode_rewards = []
     episode_count = 0  # Track number of episodes
-    
+
     while episode_count < n_episodes:
         episode_reward = 0
 
@@ -59,15 +66,16 @@ def evaluate_sfnn(genome : Any) -> float:
     Evaluate a SFNN genome and returns a fitness score
     """
 
-    final_reward = run_rl(genome, "CartPole-v1")
+    env_1_reward = run_rl(genome, "CartPole-v1")
+    env_2_reward = run_rl(genome, "Acrobot-v1")
+
+    final_reward = env_1_reward + env_2_reward
 
     return final_reward
 
 if __name__ == "__main__":
     genome = SFNN(neuron_size=10,
-                  input_layer_size=4,
-                  hidden_layer_size=10,
-                  output_layer_size=2,
+                  n_neurons=16,
                   lr=0.1,
                   ticks=2)
     print(evaluate_sfnn(genome))
