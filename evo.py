@@ -129,7 +129,8 @@ class HillClimber(EvolutionaryAlgorithm):
         self.population = []
 
         # Tracking
-        self.best_fitness = []
+        self.best_fitness_individuals = []
+        self.population_fitness = []
 
     def evolve(self):
         """
@@ -152,7 +153,8 @@ class HillClimber(EvolutionaryAlgorithm):
                 self.pickle_ea(self.exp_dir)
 
             # Tracking
-            self.best_fitness.append(self.population[0])
+            self.best_fitness_individuals.append(self.population[0])
+            self.population_fitness.append([individual.fitness for individual in self.population])
             
             end_time = time.time()
             total_time += end_time - start_time
