@@ -1,8 +1,6 @@
 """
 Implementation of RL gym environments
 """
-
-from typing import Any
 import random
 
 import torch
@@ -61,15 +59,16 @@ def run_rl(policy : SFNN,
     return episodes_weighted_avg
 
 
-def evaluate_sfnn(genome : Any) -> float:
+def evaluate_sfnn(sfnn : SFNN) -> float:
     """
     Evaluate a SFNN genome and returns a fitness score
     """
 
-    env_1_reward = run_rl(genome, "CartPole-v1")
-    env_2_reward = run_rl(genome, "Acrobot-v1")
+    env_1_reward = run_rl(sfnn, "CartPole-v1")
+    env_2_reward = run_rl(sfnn, "Acrobot-v1")
+    env_3_reward = run_rl(sfnn, "MountainCar-v0")
 
-    final_reward = env_1_reward + env_2_reward
+    final_reward = env_1_reward + env_2_reward + env_3_reward
 
     return final_reward
 
