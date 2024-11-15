@@ -56,7 +56,7 @@ class SFNN(nn.Module):
         - lr: learning rate :) this parameter should be optimized by the evo algorithm
         - ticks: number of internal run per forward pass (to process data in the resevoir layers)
     """
-    def __init__(self, neuron_size, input_layer_size, hidden_layer_size, output_layer_size, lr, ticks):
+    def __init__(self, neuron_size, n_neurons, lr, ticks):
         super().__init__()
 
         self.input_layer_neuron = Neuron(neuron_size=neuron_size)
@@ -67,17 +67,17 @@ class SFNN(nn.Module):
         self.hidden_layer_synapse = Synapse(input_size=neuron_size*2+1, hidden_size=neuron_size)
         self.output_layer_synapse = Synapse(input_size=neuron_size*2+1, hidden_size=neuron_size)
 
-        self.input_layer_size = input_layer_size
-        self.hidden_layer_size = hidden_layer_size
-        self.output_layer_size = output_layer_size
-        self.total_neurons = input_layer_size + hidden_layer_size + output_layer_size
+        self.input_layer_size = None
+        self.hidden_layer_size = None
+        self.output_layer_size = None
+        self.total_neurons = n_neurons
         
         self.neuron_size = neuron_size
         self.ticks = ticks
 
-        self.init_sparsity_matrix()
-        self.init_hidden_state_matrix()
-        self.init_post_neuron_state_matrix()
+        # self.init_sparsity_matrix()
+        # self.init_hidden_state_matrix()
+        # self.init_post_neuron_state_matrix()
         self.lr = nn.Parameter(torch.tensor(lr))
 
     def set_parameters(self, parameters):
@@ -91,6 +91,39 @@ class SFNN(nn.Module):
         returns current parameters 
         """
         return self.state_dict()
+    
+    def set_input_layer_size(self, input_layer_size):
+        """
+        Set the input layer size
+        """
+        self.input_layer_size = input_layer_size
+
+    def set_hidden_layer_size(self, hidden_layer_size):
+        """
+        Set the hidden layer size
+        """
+        self.hidden_layer_size = hidden_layer_size
+
+    def set_output_layer_size(self, output_layer_size):
+        """
+        Set the output layer size
+        """
+        self.output_layer_size = output_layer_size
+
+    def init_connectivity(self, input_size, output_size):
+        """
+        Reset the connectivity matrix
+        """
+        hidden_layer_size = self.total_neurons - input_size - output_size
+        assert hidden_layer_size > 0, "Hidden layer size must be greater than 0"
+
+        self.set_input_layer_size(input_size)
+        self.set_output_layer_size(output_size)
+        self.set_hidden_layer_size(hidden_layer_size)
+
+        self.init_sparsity_matrix()
+        self.init_hidden_state_matrix()
+        self.init_post_neuron_state_matrix()
 
     def init_sparsity_matrix(self):
         """
