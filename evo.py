@@ -11,7 +11,7 @@ import time
 import numpy as np
 
 from sfnn import SFNN
-from rl import evaluate_sfnn
+from rl import evaluate_sfnn, evaluate_sfnn_1env
 
 ################################################################################
 # ABSTRACT BASE CLASSES
@@ -89,7 +89,7 @@ class SFNNIndividual(Individual):
         return self, other
     
     def evaluate(self):
-        self.fitness = evaluate_sfnn(self.sfnn)
+        self.fitness = evaluate_sfnn_1env(self.sfnn)
     
 ################################################################################
 

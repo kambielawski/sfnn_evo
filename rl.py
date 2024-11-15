@@ -54,8 +54,6 @@ def run_rl(policy : SFNN,
     weights = np.array(range(1, n_episodes+1)) / sum(range(1, n_episodes+1))
     episodes_weighted_avg = np.average(episode_rewards, weights=weights)
 
-    print(f"Final reward: {episodes_weighted_avg}")
-
     return episodes_weighted_avg
 
 
@@ -68,9 +66,26 @@ def evaluate_sfnn(sfnn : SFNN) -> float:
     env_2_reward = run_rl(sfnn, "Acrobot-v1")
     env_3_reward = run_rl(sfnn, "MountainCar-v0")
 
-    final_reward = env_1_reward + env_2_reward + env_3_reward
+    env_1_reward_scaled = env_1_reward / 500.0  # CartPole-v1
+    env_2_reward_scaled = (env_2_reward + 500.0) / 500.0  # Acrobot-v1
+    env_3_reward_scaled = (env_3_reward + 200.0) / 200.0  # MountainCar-v0
+
+    print(f"Rewards: {env_1_reward_scaled}, {env_2_reward_scaled}, {env_3_reward_scaled} = {env_1_reward_scaled + env_2_reward_scaled + env_3_reward_scaled}")
+
+    final_reward = env_1_reward_scaled + env_2_reward_scaled + env_3_reward_scaled
 
     return final_reward
+
+def evaluate_sfnn_1env(sfnn : SFNN) -> float:
+    """
+    Evaluate a SFNN genome and returns a fitness score
+    """
+
+    env_1_reward = run_rl(sfnn, "CartPole-v1")
+    env_1_reward_scaled = env_1_reward / 500.0  # CartPole-v1
+    print(f"Rewards: {env_1_reward_scaled}")
+
+    return env_1_reward_scaled
 
 if __name__ == "__main__":
     genome = SFNN(neuron_size=10,
