@@ -12,6 +12,7 @@ import numpy as np
 
 from sfnn import SFNN
 from rl import evaluate_sfnn, evaluate_sfnn_1env
+import torch
 
 ################################################################################
 # ABSTRACT BASE CLASSES
@@ -75,10 +76,12 @@ class SFNNIndividual(Individual):
         """
         Mutate every element in the genome with a probability of mutation_rate
         """
+        #for param_type in self.genome:
+        #    for x in np.nditer(self.genome[param_type], op_flags=['readwrite']):
+        #        if np.random.random() < mutation_rate:
+        #            x[...] = np.random.uniform(-1, 1)
         for param_type in self.genome:
-            for x in np.nditer(self.genome[param_type], op_flags=['readwrite']):
-                if np.random.random() < mutation_rate:
-                    x[...] = np.random.uniform(-1, 1)
+            self.genome[param_type] += torch.rand_like(self.genome[param_type])*torch.bernoulli(torch.ones_like(self.genome[param_type])*mutation_rate)
 
         self.sfnn.set_parameters(self.genome)
 
@@ -129,7 +132,7 @@ class HillClimber(EvolutionaryAlgorithm):
         # Tracking
         self.best_fitness_individuals = []
         self.population_fitness = []
-
+        
     def evolve(self):
         """
         Evolve the population
@@ -202,5 +205,6 @@ class HillClimber(EvolutionaryAlgorithm):
         """
         Pickle the EA
         """
+        pass
         with open(os.path.join(exp_dir, 'ea.pkl'), 'wb') as f:
             pickle.dump(self, f)

@@ -7,6 +7,7 @@ import shutil
 import json
 from datetime import datetime
 from evo import HillClimber
+import torch
 
 # Parse CLI arguments
 parser = argparse.ArgumentParser()
@@ -29,6 +30,8 @@ with open(args.exp_file, "r") as f:
 # Run experiment
 if __name__ == "__main__":
     if exp_config["ea"] == "HillClimber":
+        #torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
+        torch.set_default_dtype(torch.float16)
         ea = HillClimber(exp_dir, **exp_config["evo_parameters"])
         ea.evolve()
     else:   

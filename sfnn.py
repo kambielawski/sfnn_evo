@@ -3,6 +3,7 @@ Implementation of a Structurally Flexible Neural Network (SFNN)
 """
 import torch
 import torch.nn as nn
+import torch.jit as jit
 
 class Neuron(nn.Module):
     """
@@ -17,10 +18,9 @@ class Neuron(nn.Module):
         super().__init__()
 
         self.FC = nn.Linear(neuron_size, neuron_size)
-        self.activation = nn.Tanh()
 
     def forward(self, x):
-        return self.activation(self.FC(x))
+        return nn.functional.tanh(self.FC(x))
     
     
 class Synapse(nn.Module):
@@ -75,9 +75,6 @@ class SFNN(nn.Module):
         self.neuron_size = neuron_size
         self.ticks = ticks
 
-        # self.init_sparsity_matrix()
-        # self.init_hidden_state_matrix()
-        # self.init_post_neuron_state_matrix()
         self.lr = nn.Parameter(torch.tensor(lr))
 
     def set_parameters(self, parameters):
@@ -181,7 +178,7 @@ class SFNN(nn.Module):
         placeholder = torch.zeros(self.total_neurons, self.total_neurons, self.neuron_size) # NxNxD
         
         #create observation tensor
-        input_signal = obs.reshape(self.input_layer_size, 1).expand(self.input_layer_size, self.neuron_size) # NxD
+        input_signal = obs.view(self.input_layer_size, 1).expand(self.input_layer_size, self.neuron_size) # NxD
         
         for tick in range(self.ticks):
             #process input FC layer
@@ -189,15 +186,13 @@ class SFNN(nn.Module):
 
             #process input synapse        
             connected_hidden_neurons = self.Adjacency_matrix[:self.input_layer_size] == 1
-            #only reason this loop exists is because torch's GRUCell does not support batched operations!! :@
-            for i in range(self.input_layer_size): 
-                placeholder[i, connected_hidden_neurons[i]], \
-                    self.hidden_state[i, connected_hidden_neurons[i]] = \
-                        self.input_layer_synapse(self.post_neuron_state[i].repeat(connected_hidden_neurons[i].sum(), 1), #same pre-neuron across all edges (number_of_connections x D)
-                                                self.post_neuron_state[connected_hidden_neurons[i]], #post-neurons (number_of_connections x D)
-                                                reward.repeat(connected_hidden_neurons[i].sum(), 1), #rewards (number_of_connections x 1)
-                                                self.hidden_state[i, connected_hidden_neurons[i]],   #hidden state (number_of_connections x D)
-                                                self.lr)
+            placeholder[connected_hidden_neurons.nonzero()[:,0], connected_hidden_neurons.nonzero()[:,1]], \
+                self.hidden_state[connected_hidden_neurons.nonzero()[:,0], connected_hidden_neurons.nonzero()[:,1]] = \
+                    self.input_layer_synapse(self.post_neuron_state[:self.input_layer_size].repeat_interleave(connected_hidden_neurons.sum(1), dim=0),
+                                             self.post_neuron_state[connected_hidden_neurons.nonzero()[:,1]],
+                                             reward.repeat(connected_hidden_neurons.sum(), 1),
+                                             self.hidden_state[connected_hidden_neurons.nonzero()[:,0], connected_hidden_neurons.nonzero()[:,1]],
+                                             self.lr)
             
             #process hidden FC (sum all incoming edges then pass to FC)
             self.post_neuron_state[self.input_layer_size : self.input_layer_size + self.hidden_layer_size] = \
@@ -205,15 +200,13 @@ class SFNN(nn.Module):
 
             #process hidden synapse        
             connected_hidden_neurons = self.Adjacency_matrix[self.input_layer_size : self.input_layer_size + self.hidden_layer_size] == 1
-            for i in range(self.hidden_layer_size):
-                relative_i = self.input_layer_size + i
-                placeholder[relative_i, connected_hidden_neurons[i]], \
-                    self.hidden_state[relative_i, connected_hidden_neurons[i]] = \
-                        self.hidden_layer_synapse(self.post_neuron_state[relative_i].repeat(connected_hidden_neurons[i].sum(), 1), # (number_of_connections x D)
-                                                self.post_neuron_state[connected_hidden_neurons[i]], # (number_of_connections x D)
-                                                reward.repeat(connected_hidden_neurons[i].sum(), 1), # (number_of_connection X 1)
-                                                self.hidden_state[relative_i, connected_hidden_neurons[i]], # (number_of_connection X D)
-                                                self.lr)
+            placeholder[connected_hidden_neurons.nonzero()[:,0], connected_hidden_neurons.nonzero()[:,1]], \
+                self.hidden_state[connected_hidden_neurons.nonzero()[:,0], connected_hidden_neurons.nonzero()[:,1]] = \
+                    self.hidden_layer_synapse(self.post_neuron_state[self.input_layer_size : self.input_layer_size + self.hidden_layer_size].repeat_interleave(connected_hidden_neurons.sum(1), dim=0),
+                                             self.post_neuron_state[connected_hidden_neurons.nonzero()[:,1]],
+                                             reward.repeat(connected_hidden_neurons.sum(), 1),
+                                             self.hidden_state[connected_hidden_neurons.nonzero()[:,0]+self.input_layer_size, connected_hidden_neurons.nonzero()[:,1]],
+                                             self.lr)
             
             #process output FC (sum all incoming edges then pass to FC)
             self.post_neuron_state[-self.output_layer_size:] = \
@@ -221,22 +214,22 @@ class SFNN(nn.Module):
 
             #process output synapse
             connected_hidden_neurons = self.Adjacency_matrix[-self.output_layer_size:] == 1
-            for i in range(self.output_layer_size):
-                relative_i = i + self.input_layer_size + self.hidden_layer_size
-                placeholder[relative_i, connected_hidden_neurons[i]], \
-                    self.hidden_state[relative_i, connected_hidden_neurons[i]] = \
-                        self.output_layer_synapse(self.post_neuron_state[relative_i].repeat(connected_hidden_neurons[i].sum(), 1), # (number_of_connections x D)
-                                                  self.post_neuron_state[connected_hidden_neurons[i]], # (number_of_connections x D)
-                                                  reward.repeat(connected_hidden_neurons[i].sum(), 1), # (number_of_connections x 1)
-                                                  self.hidden_state[relative_i, connected_hidden_neurons[i]], # (number_of_connections x D)
-                                                  self.lr) 
+            placeholder[connected_hidden_neurons.nonzero()[:,0], connected_hidden_neurons.nonzero()[:,1]], \
+                self.hidden_state[connected_hidden_neurons.nonzero()[:,0], connected_hidden_neurons.nonzero()[:,1]] = \
+                    self.output_layer_synapse(self.post_neuron_state[-self.output_layer_size:].repeat_interleave(connected_hidden_neurons.sum(1), dim=0),
+                                             self.post_neuron_state[connected_hidden_neurons.nonzero()[:,1]],
+                                             reward.repeat(connected_hidden_neurons.sum(), 1),
+                                             self.hidden_state[connected_hidden_neurons.nonzero()[:,0]+self.input_layer_size+self.hidden_layer_size, connected_hidden_neurons.nonzero()[:,1]],
+                                             self.lr)
                 
         #Get first element of each action neuron, then argmax to choose the action
         return self.post_neuron_state[-self.output_layer_size:, 0].argmax()
 
 if __name__=='__main__':
-    model = SFNN(input_layer_size=2, hidden_layer_size=4, output_layer_size=2, neuron_size=4, lr=0.1, ticks=1)
-    obs = torch.tensor([5,0.5])
+    torch.set_default_dtype(torch.float16)
+    model = SFNN(n_neurons=16, neuron_size=4, lr=0.1, ticks=2)
+    model.init_connectivity(input_size=4, output_size=2)
+    obs = torch.tensor([1.0,2,3,4])
     reward = torch.tensor([5])
     # sanity check 
     print(model(obs, reward))
