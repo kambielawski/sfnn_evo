@@ -36,7 +36,7 @@ def run_rl(policy : SFNN,
         for t in range(1000):
             # Insert SFNN policy here
             # action = env.action_space.sample() # Random policy
-            action = policy(torch.tensor(observation), torch.tensor(reward))
+            action = policy(torch.tensor(observation, dtype=torch.float16), torch.tensor(reward, dtype=torch.float16))
             observation, reward, terminated, truncated, _ = env.step(action.item())
             
             episode_reward += reward  # Accumulate reward
