@@ -6,7 +6,7 @@ import argparse
 import shutil
 import json
 from datetime import datetime
-from evo import HillClimber
+from evo import HillClimber, PopulationEA
 import torch
 
 # Parse CLI arguments
@@ -33,6 +33,9 @@ if __name__ == "__main__":
         #torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
         torch.set_default_dtype(torch.float16)
         ea = HillClimber(exp_dir, **exp_config["evo_parameters"])
+        ea.evolve()
+    elif exp_config["ea"] == "PopulationEA":
+        ea = PopulationEA(exp_dir, **exp_config["evo_parameters"])
         ea.evolve()
     else:   
         raise ValueError(f"Invalid EA: {exp_config['ea']}")
