@@ -82,10 +82,10 @@ def evaluate_sfnn_1env(sfnn : SFNN) -> float:
     """
 
     env_1_reward = run_rl(sfnn, "CartPole-v1")
-    env_1_reward_scaled = env_1_reward / 500.0  # CartPole-v1
-    print(f"Rewards: {env_1_reward_scaled}")
+    # env_1_reward_scaled = env_1_reward / 500.0  # CartPole-v1
+    # print(f"Rewards: {env_1_reward_scaled}")
 
-    return env_1_reward_scaled
+    return env_1_reward
 
 if __name__ == "__main__":
     genome = SFNN(neuron_size=10,

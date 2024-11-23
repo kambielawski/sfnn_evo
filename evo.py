@@ -75,12 +75,12 @@ class SFNNIndividual(Individual):
         """
         Mutate every element in the genome with a probability of mutation_rate
         """
-        #for param_type in self.genome:
-        #    for x in np.nditer(self.genome[param_type], op_flags=['readwrite']):
-        #        if np.random.random() < mutation_rate:
-        #            x[...] = np.random.uniform(-1, 1)
         for param_type in self.genome:
-            self.genome[param_type] += torch.rand_like(self.genome[param_type])*torch.bernoulli(torch.ones_like(self.genome[param_type])*mutation_rate)
+           for x in np.nditer(self.genome[param_type], op_flags=['readwrite']):
+               if np.random.random() < mutation_rate:
+                   x[...] = np.random.uniform(-1, 1)
+        # for param_type in self.genome:
+        #     self.genome[param_type] += torch.rand_like(self.genome[param_type])*torch.bernoulli(torch.ones_like(self.genome[param_type])*mutation_rate)
 
         self.sfnn.set_parameters(self.genome)
 
