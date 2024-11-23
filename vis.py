@@ -15,7 +15,6 @@ def plot_best_fitness(exp_dir : str):
     plt.title('Best Fitness')
     plt.xlabel('Generation')
     plt.ylabel('Fitness')
-    plt.show()
 
 def plot_average_fitness(exp_dir : str):
     with open(f'{exp_dir}/ea.pkl', 'rb') as f:
@@ -26,4 +25,3 @@ def plot_average_fitness(exp_dir : str):
     plt.title('Average Fitness')
     plt.xlabel('Generation')
     plt.ylabel('Fitness')
-    plt.show()
