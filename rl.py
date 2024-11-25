@@ -76,16 +76,31 @@ def evaluate_sfnn(sfnn : SFNN) -> float:
 
     return final_reward
 
-def evaluate_sfnn_1env(sfnn : SFNN) -> float:
+def evaluate_sfnn_1env(sfnn : SFNN, n_structures : int = 1) -> float:
     """
     Evaluate a SFNN genome and returns a fitness score
     """
+    env_name = f"CartPole-v1"
+    env = gym.make(env_name)
+    input_layer_size = int(np.prod(env.observation_space.shape))
+    output_layer_size = int(env.action_space.n)
 
-    env_1_reward, env_1_weighted_avg = run_rl(sfnn, "CartPole-v1")
-    # env_1_reward_scaled = env_1_reward / 500.0  # CartPole-v1
-    print(f"Rewards: {env_1_weighted_avg}")
+    rewards = []
+    rewards_weighted_avgs = []
+    connectivities = []
 
-    return env_1_reward, env_1_weighted_avg
+    for _ in range(n_structures):
+        env_reward, env_weighted_avg = run_rl(sfnn, env_name)
+        rewards.append(env_reward)
+        rewards_weighted_avgs.append(env_weighted_avg)
+        # Reset the SFNN for the next structure
+        sfnn.init_connectivity(input_layer_size, output_layer_size)
+        connectivities.append(sfnn.Adjacency_matrix.clone().detach().numpy())
+
+    final_reward = np.average(rewards_weighted_avgs)
+    print(f"Rewards: {rewards_weighted_avgs}, avg: {final_reward}")
+
+    return final_reward, rewards_weighted_avgs, connectivities
 
 if __name__ == "__main__":
     genome = SFNN(neuron_size=10,

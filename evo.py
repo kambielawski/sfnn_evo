@@ -71,6 +71,7 @@ class SFNNIndividual(Individual):
         self.genome_size = 0
         self.genome = self.sfnn.get_parameters()
         self.evaluated = False
+        self.adjacency_matrices = None
 
     def mutate(self, mutation_rate : float):
         """
@@ -92,7 +93,7 @@ class SFNNIndividual(Individual):
         return self, other
     
     def evaluate(self):
-        self.episode_rewards, self.fitness = evaluate_sfnn_1env(self.sfnn)
+        self.fitness, self.episode_rewards, self.adjacency_matrices = evaluate_sfnn_1env(self.sfnn, n_structures=3)
         self.evaluated = True
     
 ################################################################################
@@ -240,12 +241,13 @@ class PopulationEA(EvolutionaryAlgorithm):
         self.best_fitness_individuals = []
         self.population_fitness = []
 
-    def evolve(self):
+    def evolve(self, continue_exp : bool = False):
         """
         Evolve the population
         """
         # Initialize population
-        self.init_population()
+        if not continue_exp:
+            self.init_population()
 
         total_time = 0
 
@@ -312,11 +314,18 @@ class PopulationEA(EvolutionaryAlgorithm):
         for individual in self.population:
             individual.evaluate()
 
+    def reevaluate_population(self):
+        """
+        Reevaluate the population
+        """
+        for individual in self.population:
+            individual.evaluate()
+
     def pickle_ea(self, exp_dir : str):
         """
         Pickle the EA
         """
-        with open(os.path.join(exp_dir, 'ea.pkl'), 'wb') as f:
+        with open(f'{exp_dir}/ea.pkl', 'wb') as f:
             pickle.dump(self, f)
 
 ################################################################################
