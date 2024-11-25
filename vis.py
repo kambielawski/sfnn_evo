@@ -45,12 +45,14 @@ def plot_episode_rewards(exp_dir : str, label="Episode Rewards"):
     plt.xlabel('Episode')
     plt.ylabel('Reward')
 
-def visualize_sfnn(exp_dir: str):
-
+def visualize_best_sfnn(exp_dir: str):
     with open(f'{exp_dir}/ea.pkl', 'rb') as f:
         ea = pickle.load(f)
 
     sfnn = ea.best_fitness_individuals[-1].sfnn
+    visualize_sfnn(sfnn)
+
+def visualize_sfnn(sfnn: SFNN):
     adjacency_matrix = sfnn.Adjacency_matrix.detach().numpy()
     
     # Create a directed graph
@@ -126,3 +128,18 @@ def visualize_sfnn(exp_dir: str):
     
     plt.title('SFNN Network Structure')
     plt.axis('off')
+
+def plot_fitness_appended(ea_file_1: str, ea_file_2: str):
+    with open(ea_file_1, 'rb') as f:
+        ea_1 = pickle.load(f)
+    with open(ea_file_2, 'rb') as f:
+        ea_2 = pickle.load(f)
+
+    fitness_1 = [individual.fitness for individual in ea_1.best_fitness_individuals]
+    fitness_2 = [individual.fitness for individual in ea_2.best_fitness_individuals]
+
+    fitness_appended = fitness_1 + fitness_2
+    plt.plot(fitness_appended, label=f"{ea_file_1} and {ea_file_2}")
+    plt.title('Fitness')
+    plt.xlabel('Generation')
+    plt.ylabel('Fitness')
