@@ -60,11 +60,13 @@ class SFNNIndividual(Individual):
                  neuron_size : int,
                  n_neurons : int,
                  lr : float,
-                 ticks : int):
+                 ticks : int,
+                 n_structures : int = 3):
         self.sfnn = SFNN(neuron_size=neuron_size,
                          n_neurons=n_neurons,
                          lr=lr,
                          ticks=ticks)
+        self.n_structures = n_structures # Number of structures to evaluate
         self.neuron_size = neuron_size # Number of neurons in the FC input layer
         self.fitness = None
         self.episode_rewards = None
@@ -93,7 +95,7 @@ class SFNNIndividual(Individual):
         return self, other
     
     def evaluate(self):
-        self.fitness, self.episode_rewards, self.adjacency_matrices = evaluate_sfnn_1env(self.sfnn, n_structures=3)
+        self.fitness, self.episode_rewards, self.adjacency_matrices = evaluate_sfnn_1env(self.sfnn, n_structures=self.n_structures)
         self.evaluated = True
     
 ################################################################################
@@ -220,7 +222,8 @@ class PopulationEA(EvolutionaryAlgorithm):
                  n_neurons : int, 
                  lr : float, 
                  ticks : int,
-                 tournament_size : int = 2):
+                 tournament_size : int = 2,
+                 n_structures : int = 1):
         self.exp_dir = exp_dir
         
         self.population_size = population_size
@@ -229,6 +232,7 @@ class PopulationEA(EvolutionaryAlgorithm):
         self.tournament_size = tournament_size
         self.neuron_size = neuron_size
         self.gru_size = gru_size
+        self.n_structures = n_structures # Number of structures to evaluate
 
         # SFNN parameters
         self.n_neurons = n_neurons
@@ -283,7 +287,8 @@ class PopulationEA(EvolutionaryAlgorithm):
             child = SFNNIndividual(self.neuron_size,
                                    self.n_neurons,
                                    self.lr,
-                                   self.ticks)
+                                   self.ticks,
+                                   self.n_structures)
             child.genome = deepcopy(parent.genome)
             child.mutate(self.mutation_rate)
             child.evaluate()

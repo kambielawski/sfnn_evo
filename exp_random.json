@@ -1,5 +1,5 @@
 {
-    "ea": "PopulationEA",
+    "ea": "RandomSearch",
     "n_runs": 1,
     "evo_parameters": {
         "population_size": 50,
@@ -10,7 +10,6 @@
         "n_neurons": 12,
         "lr": 0.1,
         "ticks": 2,
-        "tournament_size": 2,
-        "n_structures": 1
+        "tournament_size": 2
     }
 }

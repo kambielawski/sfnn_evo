@@ -45,6 +45,19 @@ def plot_episode_rewards(exp_dir : str, label="Episode Rewards"):
     plt.xlabel('Episode')
     plt.ylabel('Reward')
 
+def best_individuals(exp_dir: str):
+    with open(f'{exp_dir}/ea.pkl', 'rb') as f:
+        ea = pickle.load(f)
+
+    best = ea.best_fitness_individuals[-1]
+    print(len(ea.best_fitness_individuals))
+    print(best.episode_rewards)
+
+    visualize_sfnn(best.sfnn, best.adjacency_matrices[0])
+    visualize_sfnn(best.sfnn, best.adjacency_matrices[1])
+    visualize_sfnn(best.sfnn, best.adjacency_matrices[2])
+
+
 def visualize_best_sfnn(exp_dir: str):
     with open(f'{exp_dir}/ea.pkl', 'rb') as f:
         ea = pickle.load(f)
@@ -52,8 +65,9 @@ def visualize_best_sfnn(exp_dir: str):
     sfnn = ea.best_fitness_individuals[-1].sfnn
     visualize_sfnn(sfnn)
 
-def visualize_sfnn(sfnn: SFNN):
-    adjacency_matrix = sfnn.Adjacency_matrix.detach().numpy()
+def visualize_sfnn(sfnn : SFNN, adjacency_matrix : np.ndarray = None):
+    if adjacency_matrix is None:
+        adjacency_matrix = sfnn.Adjacency_matrix.detach().numpy()
     
     # Create a directed graph
     G = nx.DiGraph()
