@@ -240,7 +240,7 @@ class PopulationEA(EvolutionaryAlgorithm):
         self.ticks = ticks
 
         self.population = []
-
+        self.generation = 0
         # Tracking
         self.best_fitness_individuals = []
         self.population_fitness = []
@@ -256,14 +256,14 @@ class PopulationEA(EvolutionaryAlgorithm):
         total_time = 0
 
         # Evolve the population
-        for gen in range(self.n_generations):
-            print(f'Generation {gen} running.')
+        while self.generation < self.n_generations:
+            print(f'Generation {self.generation} running.')
             start_time = time.time()
 
-            self.evolve_one_generation(gen)
+            self.evolve_one_generation(self.generation)
             
             # Pickle the run
-            if gen % 100 == 0:
+            if self.generation % 100 == 0:
                 self.pickle_ea(self.exp_dir)
 
             # Tracking
@@ -272,7 +272,8 @@ class PopulationEA(EvolutionaryAlgorithm):
             
             end_time = time.time()
             total_time += end_time - start_time
-            print(f'Generation {gen}: {end_time - start_time} seconds. Average time per generation: {total_time / (gen + 1)}')
+            self.generation += 1
+            print(f'Generation {self.generation}: {end_time - start_time} seconds. Average time per generation: {total_time / self.generation}')
 
     def evolve_one_generation(self, gen : int):
         """
@@ -314,7 +315,8 @@ class PopulationEA(EvolutionaryAlgorithm):
         self.population = [SFNNIndividual(self.neuron_size, 
                                           self.n_neurons,
                                           self.lr,
-                                          self.ticks) for _ in range(self.population_size)]
+                                          self.ticks,
+                                          self.n_structures) for _ in range(self.population_size)]
         # Evaluate the initial population
         for individual in self.population:
             individual.evaluate()
@@ -409,7 +411,8 @@ class RandomSearch(EvolutionaryAlgorithm):
             child = SFNNIndividual(self.neuron_size,
                                    self.n_neurons,
                                    self.lr,
-                                   self.ticks)
+                                   self.ticks,
+                                   self.n_structures)
             child.evaluate()
             children.append(child)
 
@@ -426,7 +429,8 @@ class RandomSearch(EvolutionaryAlgorithm):
         self.population = [SFNNIndividual(self.neuron_size, 
                                           self.n_neurons,
                                           self.lr,
-                                          self.ticks) for _ in range(self.population_size)]
+                                          self.ticks,
+                                          self.n_structures) for _ in range(self.population_size)]
         # Evaluate the initial population
         for individual in self.population:
             individual.evaluate()
