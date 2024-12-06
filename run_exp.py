@@ -12,6 +12,7 @@ import torch
 # Parse CLI arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("exp_file", type=str, help="Path to the experiment file")
+parser.add_argument("--run_id", type=int, default=0, help="Run ID")
 args = parser.parse_args()
 
 # Load experiment configuration
@@ -23,7 +24,10 @@ os.makedirs('experiments', exist_ok=True)
 ea = exp_config["ea"]
 date = datetime.now().strftime("%Y-%m-%d")
 
-exp_dir = f'./experiments/exp_{date}_{ea}'
+mr = exp_config["evo_parameters"]["mutation_rate"]
+tsize = exp_config["evo_parameters"]["tournament_size"]
+
+exp_dir = f'./experiments/exp_{date}_{ea}_mr{mr}_tsize{tsize}_run{args.run_id}'
 os.makedirs(exp_dir, exist_ok=True)
 
 # Move experiment file to experiment directory

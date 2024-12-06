@@ -15,5 +15,6 @@ conda activate sfnn-evo
 
 echo $1
 echo $2
+echo $3
 
-python3 run_exp.py "$1"
+python3 run_exp.py "$1" --run_id "$2"
