@@ -256,15 +256,15 @@ class PopulationEA(EvolutionaryAlgorithm):
         total_time = 0
 
         # Evolve the population
-        while self.generation < self.n_generations:
+        while self.generation < self.n_generations+1:
             print(f'Generation {self.generation} running.')
             start_time = time.time()
 
             self.evolve_one_generation(self.generation)
             
             # Pickle the run
-            if self.generation % 100 == 0:
-                self.pickle_ea(self.exp_dir)
+            if self.generation % 250 == 0:
+                self.pickle_ea(self.exp_dir, gen=self.generation)
 
             # Tracking
             self.best_fitness_individuals.append(self.population[0])
@@ -321,18 +321,19 @@ class PopulationEA(EvolutionaryAlgorithm):
         for individual in self.population:
             individual.evaluate()
 
-    def reevaluate_population(self):
+    def reevaluate_population(self, n_structures : int = 1):
         """
         Reevaluate the population
         """
         for individual in self.population:
+            individual.n_structures = n_structures
             individual.evaluate()
 
-    def pickle_ea(self, exp_dir : str):
+    def pickle_ea(self, exp_dir : str, gen : int):
         """
         Pickle the EA
         """
-        with open(f'{exp_dir}/ea.pkl', 'wb') as f:
+        with open(f'{exp_dir}/ea_{gen}.pkl', 'wb') as f:
             pickle.dump(self, f)
 
 ################################################################################
