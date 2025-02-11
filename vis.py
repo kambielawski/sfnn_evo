@@ -5,25 +5,26 @@ import pickle
 import networkx as nx
 from sfnn import SFNN
 from matplotlib.patches import Patch
+import torch
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_best_fitness(exp_dir : str, label="Best Fitness", gens=None):
-    with open(f'{exp_dir}/ea.pkl', 'rb') as f:
+def plot_best_fitness(pkl_file_path : str, label="Best Fitness", gens_start=None, gens_end=None):
+    with open(pkl_file_path, 'rb') as f:
         ea = pickle.load(f)
 
     best_fitness_values = [individual.fitness for individual in ea.best_fitness_individuals]
-    if gens is None:
+    if gens_start is None or gens_end is None:
         plt.plot(best_fitness_values, label=label)
     else:
-        plt.plot(best_fitness_values[:gens], label=label)
+        plt.plot(range(gens_start, gens_end), best_fitness_values[gens_start:gens_end], label=label)
     plt.title('Best Fitness')
     plt.xlabel('Generation')
     plt.ylabel('Fitness')
 
-def plot_average_fitness(exp_dir : str, label="Average Fitness", gens=None):
-    with open(f'{exp_dir}/ea.pkl', 'rb') as f:
+def plot_average_fitness(pkl_file_path : str, label="Average Fitness", gens=None):
+    with open(pkl_file_path, 'rb') as f:
         ea = pickle.load(f)
 
     average_fitness_values = [np.mean(fitness_values) for fitness_values in ea.population_fitness]
@@ -156,4 +157,20 @@ def plot_fitness_appended(ea_file_1: str, ea_file_2: str):
     plt.plot(fitness_appended, label=f"{ea_file_1} and {ea_file_2}")
     plt.title('Fitness')
     plt.xlabel('Generation')
+    plt.ylabel('Fitness')
+
+def populations_box_plot(pkl_file_paths):
+    torch.set_default_dtype(torch.float16)
+    evo_objects = [pickle.load(open(pkl_file_path, 'rb')) for pkl_file_path in pkl_file_paths]
+
+    for evo_object in evo_objects:
+        evo_object.reevaluate_population(n_structures=10)
+
+    populations = [evo_object.population for evo_object in evo_objects]
+
+    fitnesses = [[individual.fitness for individual in population] for population in populations]
+    print(fitnesses)
+    plt.boxplot(fitnesses, labels=['Gen ' + ''.join(filter(str.isdigit, pkl_file_path.split('/')[-1])) for pkl_file_path in pkl_file_paths])
+    plt.title('Population Fitness')
+    plt.xlabel('Population')
     plt.ylabel('Fitness')
