@@ -41,11 +41,11 @@ class EvolutionaryAlgorithm(ABC):
     Abstract base class for evolutionary algorithms
     """
     @abstractmethod
-    def evolve(self):
+    def evolve_one_generation(self):
         pass
 
     @abstractmethod
-    def evolve_one_generation(self):
+    def init_population(self):
         pass
 
 ################################################################################
@@ -108,7 +108,6 @@ class HillClimber(EvolutionaryAlgorithm):
                  exp_dir : str,
                  population_size : int,
                  mutation_rate : float,
-                 n_generations : int,
                  neuron_size : int,
                  gru_size : int,
                  n_neurons : int,
@@ -118,7 +117,6 @@ class HillClimber(EvolutionaryAlgorithm):
         
         self.population_size = population_size
         self.mutation_rate = mutation_rate
-        self.n_generations = n_generations
         self.neuron_size = neuron_size
         self.gru_size = gru_size
 
@@ -132,34 +130,10 @@ class HillClimber(EvolutionaryAlgorithm):
         # Tracking
         self.best_fitness_individuals = []
         self.population_fitness = []
-        
-    def evolve(self):
-        """
-        Evolve the population
-        """
+
         # Initialize population
         self.init_population()
-
-        total_time = 0
-
-        # Evolve the population
-        for gen in range(self.n_generations):
-            print(f'Generation {gen} running.')
-            start_time = time.time()
-
-            self.evolve_one_generation(gen)
-            
-            # Pickle the run
-            if gen % 100 == 0:
-                self.pickle_ea(self.exp_dir)
-
-            # Tracking
-            self.best_fitness_individuals.append(self.population[0])
-            self.population_fitness.append([individual.fitness for individual in self.population])
-            
-            end_time = time.time()
-            total_time += end_time - start_time
-            print(f'Generation {gen}: {end_time - start_time} seconds. Average time per generation: {total_time / (gen + 1)}')
+        
 
     def evolve_one_generation(self, gen : int):
         """
@@ -216,7 +190,6 @@ class PopulationEA(EvolutionaryAlgorithm):
                  exp_dir : str, 
                  population_size : int, 
                  mutation_rate : float, 
-                 n_generations : int, 
                  neuron_size : int, 
                  gru_size : int, 
                  n_neurons : int, 
@@ -228,7 +201,6 @@ class PopulationEA(EvolutionaryAlgorithm):
         
         self.population_size = population_size
         self.mutation_rate = mutation_rate
-        self.n_generations = n_generations
         self.tournament_size = tournament_size
         self.neuron_size = neuron_size
         self.gru_size = gru_size
@@ -245,35 +217,37 @@ class PopulationEA(EvolutionaryAlgorithm):
         self.best_fitness_individuals = []
         self.population_fitness = []
 
-    def evolve(self, continue_exp : bool = False):
-        """
-        Evolve the population
-        """
-        # Initialize population
-        if not continue_exp:
-            self.init_population()
+        self.init_population()
 
-        total_time = 0
+    # def evolve(self, continue_exp : bool = False):
+    #     """
+    #     Evolve the population
+    #     """
+    #     # Initialize population
+    #     if not continue_exp:
+    #         self.init_population()
 
-        # Evolve the population
-        while self.generation < self.n_generations+1:
-            print(f'Generation {self.generation} running.')
-            start_time = time.time()
+    #     total_time = 0
 
-            self.evolve_one_generation(self.generation)
+    #     # Evolve the population
+    #     while self.generation < self.n_generations+1:
+    #         print(f'Generation {self.generation} running.')
+    #         start_time = time.time()
+
+    #         self.evolve_one_generation(self.generation)
             
-            # Pickle the run
-            if self.generation % 250 == 0:
-                self.pickle_ea(self.exp_dir, gen=self.generation)
+    #         # Pickle the run
+    #         if self.generation % 250 == 0:
+    #             self.pickle_ea(self.exp_dir, gen=self.generation)
 
-            # Tracking
-            self.best_fitness_individuals.append(self.population[0])
-            self.population_fitness.append([individual.fitness for individual in self.population])
+    #         # Tracking
+    #         self.best_fitness_individuals.append(self.population[0])
+    #         self.population_fitness.append([individual.fitness for individual in self.population])
             
-            end_time = time.time()
-            total_time += end_time - start_time
-            self.generation += 1
-            print(f'Generation {self.generation}: {end_time - start_time} seconds. Average time per generation: {total_time / self.generation}')
+    #         end_time = time.time()
+    #         total_time += end_time - start_time
+    #         self.generation += 1
+    #         print(f'Generation {self.generation}: {end_time - start_time} seconds. Average time per generation: {total_time / self.generation}')
 
     def evolve_one_generation(self, gen : int):
         """
@@ -346,18 +320,17 @@ class RandomSearch(EvolutionaryAlgorithm):
                  exp_dir : str, 
                  population_size : int, 
                  mutation_rate : float, 
-                 n_generations : int, 
                  neuron_size : int, 
                  gru_size : int, 
                  n_neurons : int, 
                  lr : float, 
                  ticks : int,
-                 tournament_size : int = 2):
+                 tournament_size : int = 2,
+                 n_structures : int = 1):
         self.exp_dir = exp_dir
         
         self.population_size = population_size
         self.mutation_rate = mutation_rate
-        self.n_generations = n_generations
         self.tournament_size = tournament_size
         self.neuron_size = neuron_size
         self.gru_size = gru_size
@@ -366,6 +339,7 @@ class RandomSearch(EvolutionaryAlgorithm):
         self.n_neurons = n_neurons
         self.lr = lr
         self.ticks = ticks
+        self.n_structures = n_structures
 
         self.population = []
 
@@ -373,33 +347,8 @@ class RandomSearch(EvolutionaryAlgorithm):
         self.best_fitness_individuals = []
         self.population_fitness = []
 
-    def evolve(self):
-        """
-        Evolve the population
-        """
-        # Initialize population
         self.init_population()
 
-        total_time = 0
-
-        # Evolve the population
-        for gen in range(self.n_generations):
-            print(f'Generation {gen} running.')
-            start_time = time.time()
-
-            self.evolve_one_generation(gen)
-            
-            # Pickle the run
-            if gen % 100 == 0:
-                self.pickle_ea(self.exp_dir)
-
-            # Tracking
-            self.best_fitness_individuals.append(self.population[0])
-            self.population_fitness.append([individual.fitness for individual in self.population])
-            
-            end_time = time.time()
-            total_time += end_time - start_time
-            print(f'Generation {gen}: {end_time - start_time} seconds. Average time per generation: {total_time / (gen + 1)}')
 
     def evolve_one_generation(self, gen : int):
         """
