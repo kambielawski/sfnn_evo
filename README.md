@@ -24,7 +24,8 @@ Example:
         "gru_size": 10,
         "hidden_layer_size": 10,
         "lr": 0.1,
-        "ticks": 2
+        "ticks": 2,
+        "n_structures": 3
     }
 }
 ```
