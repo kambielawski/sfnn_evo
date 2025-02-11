@@ -1,14 +1,14 @@
 {
-    "ea": "HillClimber",
+    "ea": "PopulationEA",
     "n_runs": 1,
     "evo_parameters": {
         "population_size": 10,
-        "n_generations": 1000,
         "mutation_rate": 0.01,
         "neuron_size": 4,
         "gru_size": 10,
         "n_neurons": 16,
         "lr": 0.1,
-        "ticks": 2
+        "ticks": 2,
+        "tournament_size": 3
     }
 }
