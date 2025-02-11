@@ -90,12 +90,15 @@ def evaluate_sfnn_1env(sfnn : SFNN, n_structures : int = 1) -> float:
     connectivities = []
 
     for _ in range(n_structures):
-        env_reward, env_weighted_avg = run_rl(sfnn, env_name)
-        rewards.append(env_reward)
-        rewards_weighted_avgs.append(env_weighted_avg)
+        # sfnn = sfnn.float()
+
         # Reset the SFNN for the next structure
         sfnn.init_connectivity(input_layer_size, output_layer_size)
         connectivities.append(sfnn.Adjacency_matrix.clone().detach().numpy())
+
+        env_reward, env_weighted_avg = run_rl(sfnn, env_name)
+        rewards.append(env_reward)
+        rewards_weighted_avgs.append(env_weighted_avg)
 
     final_reward = np.average(rewards_weighted_avgs)
     print(f"Rewards: {rewards_weighted_avgs}, avg: {final_reward}")
